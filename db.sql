@@ -9,11 +9,12 @@ CREATE TABLE deriveRequest (
   regDate DATETIME DEFAULT NULL, # 작성날짜
   updateDate DATETIME DEFAULT NULL, # 갱신날짜
   url CHAR(200) UNIQUE NOT NULL,
-  originUrl CHAR(200) UNIQUE NOT NULL,
+  originUrl CHAR(200) NOT NULL,
   width SMALLINT(10) UNSIGNED NOT NULL,
   height SMALLINT(10) UNSIGNED NOT NULL,
   maxWidth SMALLINT(10) UNSIGNED NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY (originUrl)
 );
 
 # 파일 테이블 추가

@@ -11,7 +11,7 @@
 		updateDate = NOW(),
 		url =
 		#{url},
-		originUrl = #{url},
+		originUrl = #{originUrl},
 		width = #{width},
 		height = #{height},
 		maxWidth = #{maxWidth}

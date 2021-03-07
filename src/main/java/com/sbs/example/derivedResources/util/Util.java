@@ -264,4 +264,11 @@ public class Util {
 			e.printStackTrace();
 		}
 	}
+	
+	public static String getUrlFromHttpServletRequest(HttpServletRequest req) {
+		String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() + req.getRequestURI()
+				+ "?" + req.getQueryString();
+
+		return url;
+	}
 }
