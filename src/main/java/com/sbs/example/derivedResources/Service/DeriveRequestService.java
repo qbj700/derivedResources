@@ -98,19 +98,32 @@ public class DeriveRequestService {
 	public GenFile getDerivedGenFileByWidth(DeriveRequest deriveRequest, int width) {
 
 		DeriveRequest originDeriveRequest = deriveRequestDao.getDeriveRequestByOriginUrl(deriveRequest.getOriginUrl());
+		GenFile originGenFile = getOriginGenFile(originDeriveRequest);
 
-		return genFileService.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidth("deriveRequest", originDeriveRequest.getId(), "img", width);
+		int originWidth = originGenFile.getWidth();
+		int originHeight = originGenFile.getHeight();
+		int height = originHeight * width / originWidth;
+
+		return genFileService.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight("deriveRequest", originDeriveRequest.getId(), "img", width, height);
 	}
 
 	public GenFile getDerivedGenFileByMaxWidth(DeriveRequest deriveRequest, int maxWidth) {
 		DeriveRequest originDeriveRequest = deriveRequestDao.getDeriveRequestByOriginUrl(deriveRequest.getOriginUrl());
+		GenFile originGenFile = getOriginGenFile(originDeriveRequest);
 
-		return genFileService.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndMaxWidth("deriveRequest", originDeriveRequest.getId(), "img", maxWidth);
+		int originWidth = originGenFile.getWidth();
+
+		if ( originWidth <= maxWidth ) {
+			return originGenFile;
+		}
+
+		int originHeight = originGenFile.getHeight();
+		int height = originHeight * maxWidth / originWidth;
+
+		return genFileService.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight("deriveRequest", originDeriveRequest.getId(), "img", maxWidth, height);
 	}
 
 	private GenFile makeDerivedGenFileByWidthAndHeight(DeriveRequest deriveRequest, int width, int height) {
-		DeriveRequest originDeriveRequest = deriveRequestDao.getDeriveRequestByOriginUrl(deriveRequest.getOriginUrl());
-
 		GenFile originGenFile = getOriginGenFile(deriveRequest);
 
 		String destFilePath = App.getNewTmpFilePath(originGenFile.getFileExt());
@@ -124,8 +137,6 @@ public class DeriveRequestService {
 	}
 
 	private GenFile makeDerivedGenFileByWidth(DeriveRequest deriveRequest, int width) {
-		DeriveRequest originDeriveRequest = deriveRequestDao.getDeriveRequestByOriginUrl(deriveRequest.getOriginUrl());
-
 		GenFile originGenFile = getOriginGenFile(deriveRequest);
 
 		String destFilePath = App.getNewTmpFilePath(originGenFile.getFileExt());

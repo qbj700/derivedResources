@@ -88,15 +88,31 @@ public class GenFileService {
 
 	}
 
-	public GenFile getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight(String relTypeCode, int relId, String fileExtTypeCode, int width, int height) {
-		return genFileDao.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight(relTypeCode, relId, fileExtTypeCode, width, height);
-	}
+	public GenFile getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight(String relTypeCode, int relId,
+			String fileExtTypeCode, int width, int height) {
+		GenFile genFile = null;
 
-	public GenFile getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidth(String relTypeCode, int relId, String fileExtTypeCode, int width) {
-		return genFileDao.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidth(relTypeCode, relId, fileExtTypeCode, width);
-	}
+		genFile = genFileDao.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight(relTypeCode, relId,
+				fileExtTypeCode, width, height);
 
-	public GenFile getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndMaxWidth(String relTypeCode, int relId, String fileExtTypeCode, int maxWidth) {
-		return genFileDao.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndMaxWidth(relTypeCode, relId, fileExtTypeCode, maxWidth);
+		if (genFile != null) {
+			return genFile;
+		}
+
+		genFile = genFileDao.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight(relTypeCode, relId,
+				fileExtTypeCode, width, height - 1);
+
+		if (genFile != null) {
+			return genFile;
+		}
+
+		genFile = genFileDao.getGenFileByRelTypeCodeAndRelIdAndFileExtTypeCodeAndWidthAndHeight(relTypeCode, relId,
+				fileExtTypeCode, width, height + 1);
+
+		if (genFile != null) {
+			return genFile;
+		}
+
+		return null;
 	}
 }
