@@ -44,6 +44,10 @@ public class GenFileService {
 	public GenFile getGenFile(int id) {
 		return genFileDao.getGenFileById(id);
 	}
+	
+	GenFile getGenFile(String relTypeCode, int relId, String typeCode, String type2Code, int fileNo) {
+		return genFileDao.getGenFile(relTypeCode, relId, typeCode, type2Code, fileNo);
+	}
 
 	public ResultData save(String relTypeCode, int relId, String typeCode, String type2Code, int fileNo,
 			String originFileName, String filePath) {
