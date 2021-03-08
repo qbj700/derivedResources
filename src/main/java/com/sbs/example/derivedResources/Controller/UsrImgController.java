@@ -55,13 +55,29 @@ public class UsrImgController {
 			String filePath = deriveRequestService.getFilePathOrDownloadByOriginUrl(originUrl);
 
 			deriveRequestService.save(currentUrl, originUrl, width, height, maxWidth, filePath);
+			deriveRequest = deriveRequestService.getDeriveRequestByUrl(currentUrl);
 		}
 
-		deriveRequest = deriveRequestService.getDeriveRequestByUrl(currentUrl);
+		int width = deriveRequest.getWidth();
+		int height = deriveRequest.getHeight();
+		int maxWidth = deriveRequest.getMaxWidth();
 
-		GenFile originGenFile = deriveRequestService.getOriginGenFile(deriveRequest);
-
-		return getClientCachedResponseEntity(originGenFile, req);
+		if ( width > 0 && height > 0 ) {
+			GenFile derivedGenFile = deriveRequestService.getDerivedGenFileByWidthAndHeightOrMake(deriveRequest, width, height);
+			return getClientCachedResponseEntity(derivedGenFile, req);
+		}
+		else if ( width > 0 ) {
+			GenFile derivedGenFile = deriveRequestService.getDerivedGenFileByWidthOrMake(deriveRequest, width);
+			return getClientCachedResponseEntity(derivedGenFile, req);
+		}
+		else if ( maxWidth > 0 ) {
+			GenFile derivedGenFile = deriveRequestService.getDerivedGenFileByMaxWidthOrMake(deriveRequest, maxWidth);
+			return getClientCachedResponseEntity(derivedGenFile, req);
+		}
+		else {
+			GenFile originGenFile = deriveRequestService.getOriginGenFile(deriveRequest);
+			return getClientCachedResponseEntity(originGenFile, req);		
+		}
 	}
 
 	@GetMapping("/imgById")

@@ -9,12 +9,11 @@ CREATE TABLE deriveRequest (
   regDate DATETIME DEFAULT NULL, # 작성날짜
   updateDate DATETIME DEFAULT NULL, # 갱신날짜
   url CHAR(200) UNIQUE NOT NULL,
-  originUrl CHAR(200) NOT NULL,
+  originUrl CHAR(200) UNIQUE NOT NULL,
   width SMALLINT(10) UNSIGNED NOT NULL,
   height SMALLINT(10) UNSIGNED NOT NULL,
   maxWidth SMALLINT(10) UNSIGNED NOT NULL,
-  PRIMARY KEY (id),
-  KEY (originUrl)
+  PRIMARY KEY (id)
 );
 
 # 파일 테이블 추가
@@ -37,4 +36,11 @@ CREATE TABLE genFile (
   fileDir CHAR(20) NOT NULL, # 파일이 저장되는 폴더명
   PRIMARY KEY (id),
   KEY relId (relId,relTypeCode,typeCode,type2Code,fileNo)
-); 
+);
+
+# originUrl 인덱스를 일반 인덱스로 변경
+ALTER TABLE deriveRequest DROP INDEX originUrl, ADD KEY originUrl (originUrl);
+
+# 미디어의 너비, 높이 칼럼 추가
+ALTER TABLE genFile ADD COLUMN `width` SMALLINT(2) UNSIGNED NOT NULL AFTER `fileDir`;
+ALTER TABLE genFile ADD COLUMN `height` SMALLINT(2) UNSIGNED NOT NULL AFTER `width`;
