@@ -41,8 +41,7 @@ public class UsrImgController {
 	private DeriveRequestService deriveRequestService;
 
 	@RequestMapping("/img")
-	public ResponseEntity<Resource> showImg(HttpServletRequest req, @RequestParam Map<String, Object> param)
-			throws FileNotFoundException {
+	public ResponseEntity<Resource> showImg(HttpServletRequest req, @RequestParam Map<String, Object> param) throws FileNotFoundException {
 		String currentUrl = Util.getUrlFromHttpServletRequest(req);
 		String queryString = req.getQueryString();
 		String originUrl = queryString.split("url=")[1];
@@ -53,7 +52,7 @@ public class UsrImgController {
 			int width = Util.getAsInt(param.get("width"), 0);
 			int height = Util.getAsInt(param.get("height"), 0);
 			int maxWidth = Util.getAsInt(param.get("maxWidth"), 0);
-			String filePath = Util.downloadFileByHttp(originUrl, tmpDirPath);
+			String filePath = deriveRequestService.getFilePathOrDownloadByOriginUrl(originUrl);
 
 			deriveRequestService.save(currentUrl, originUrl, width, height, maxWidth, filePath);
 		}
@@ -68,13 +67,12 @@ public class UsrImgController {
 	@GetMapping("/imgById")
 	public ResponseEntity<Resource> downloadFile(int id, HttpServletRequest req) throws IOException {
 		GenFile genFile = genFileService.getGenFile(id);
-		
+
 		return getClientCachedResponseEntity(genFile, req);
 	}
 
-	private ResponseEntity<Resource> getClientCachedResponseEntity(GenFile genFile, HttpServletRequest req)
-			throws FileNotFoundException {
-		String filePath = genFile.getFilePath(genFileDirPath);
+	private ResponseEntity<Resource> getClientCachedResponseEntity(GenFile genFile, HttpServletRequest req) throws FileNotFoundException {
+		String filePath = genFile.getFilePath();
 
 		Resource resource = new InputStreamResource(new FileInputStream(filePath));
 
@@ -85,9 +83,6 @@ public class UsrImgController {
 			contentType = "application/octet-stream";
 		}
 
-		return ResponseEntity.ok()
-				.cacheControl(CacheControl.maxAge(60 * 60 * 24 * 30, TimeUnit.SECONDS))
-				.contentType(MediaType.parseMediaType(contentType))
-				.body(resource);
+		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(60 * 60 * 24 * 30, TimeUnit.SECONDS)).contentType(MediaType.parseMediaType(contentType)).body(resource);
 	}
 }
