@@ -41,10 +41,8 @@ public class UsrImgController {
 	private DeriveRequestService deriveRequestService;
 
 	@RequestMapping("/img")
-	public ResponseEntity<Resource> showImg(HttpServletRequest req, @RequestParam Map<String, Object> param) throws FileNotFoundException {
+	public ResponseEntity<Resource> showImg(HttpServletRequest req, @RequestParam Map<String, Object> param, @RequestParam("url") String originUrl) throws FileNotFoundException {
 		String currentUrl = Util.getUrlFromHttpServletRequest(req);
-		String queryString = req.getQueryString();
-		String originUrl = queryString.split("url=")[1];
 
 		DeriveRequest deriveRequest = deriveRequestService.getDeriveRequestByUrl(currentUrl);
 
@@ -52,32 +50,38 @@ public class UsrImgController {
 			int width = Util.getAsInt(param.get("width"), 0);
 			int height = Util.getAsInt(param.get("height"), 0);
 			int maxWidth = Util.getAsInt(param.get("maxWidth"), 0);
-			String filePath = deriveRequestService.getFilePathOrDownloadByOriginUrl(originUrl);
+			
+			int newDeriveRequestId = deriveRequestService.save(currentUrl, originUrl, width, height, maxWidth);
+			deriveRequest = deriveRequestService.getDeriveRequestById(newDeriveRequestId);
 
-			deriveRequestService.save(currentUrl, originUrl, width, height, maxWidth, filePath);
-			deriveRequest = deriveRequestService.getDeriveRequestByUrl(currentUrl);
-		}
+			DeriveRequest originDeriveRequest = null;
 
-		int width = deriveRequest.getWidth();
-		int height = deriveRequest.getHeight();
-		int maxWidth = deriveRequest.getMaxWidth();
+			if (deriveRequest.isOriginStatus()) {
+				originDeriveRequest = deriveRequest;
+			} else {
+				originDeriveRequest = deriveRequestService.getDeriveRequestByOriginUrl(originUrl);
+			}
 
-		if ( width > 0 && height > 0 ) {
-			GenFile derivedGenFile = deriveRequestService.getDerivedGenFileByWidthAndHeightOrMake(deriveRequest, width, height);
+			GenFile derivedGenFile = null;
+
+			if (width > 0 && height > 0) {
+				derivedGenFile = deriveRequestService.getDerivedGenFileByWidthAndHeightOrMake(originDeriveRequest,
+						width, height);
+			} else if (width > 0) {
+				derivedGenFile = deriveRequestService.getDerivedGenFileByWidthOrMake(originDeriveRequest, width);
+			} else if (maxWidth > 0) {
+				derivedGenFile = deriveRequestService.getDerivedGenFileByMaxWidthOrMake(originDeriveRequest, maxWidth);
+			} else {
+				derivedGenFile = deriveRequestService.getOriginGenFile(originDeriveRequest);
+			}
+
+			deriveRequestService.updateDerivedGenFileId(newDeriveRequestId, derivedGenFile.getId());
+			
 			return getClientCachedResponseEntity(derivedGenFile, req);
 		}
-		else if ( width > 0 ) {
-			GenFile derivedGenFile = deriveRequestService.getDerivedGenFileByWidthOrMake(deriveRequest, width);
-			return getClientCachedResponseEntity(derivedGenFile, req);
-		}
-		else if ( maxWidth > 0 ) {
-			GenFile derivedGenFile = deriveRequestService.getDerivedGenFileByMaxWidthOrMake(deriveRequest, maxWidth);
-			return getClientCachedResponseEntity(derivedGenFile, req);
-		}
-		else {
-			GenFile originGenFile = deriveRequestService.getOriginGenFile(deriveRequest);
-			return getClientCachedResponseEntity(originGenFile, req);		
-		}
+		
+		GenFile originGenFile = genFileService.getGenFile(deriveRequest.getGenFileId());
+		return getClientCachedResponseEntity(originGenFile, req);
 	}
 
 	@GetMapping("/imgById")
@@ -99,6 +103,7 @@ public class UsrImgController {
 			contentType = "application/octet-stream";
 		}
 
-		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(60 * 60 * 24 * 30, TimeUnit.SECONDS)).contentType(MediaType.parseMediaType(contentType)).body(resource);
+		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(60 * 60 * 24 * 30, TimeUnit.SECONDS))
+				.contentType(MediaType.parseMediaType(contentType)).body(resource);
 	}
 }
