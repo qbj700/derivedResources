@@ -1,4 +1,4 @@
-package com.sbs.example.derivedResources.Service;
+package com.sbs.example.derivedResources.service;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
