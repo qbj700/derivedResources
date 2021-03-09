@@ -1,4 +1,5 @@
 package com.sbs.example.derivedResources.util;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.tika.Tika;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 import org.imgscalr.Scalr.Mode;
@@ -65,7 +67,15 @@ public class Util {
 
 	public static String downloadFileByHttp(String fileUrl, String outputDir) {
 		String originFileName = getFileNameFromUrl(fileUrl);
-		String tempFileName = UUID.randomUUID() + "." + getFileExt(originFileName);
+
+		String fileExt = getFileExt(originFileName);
+
+		if (fileExt.length() == 0) {
+			fileExt = "tmp";
+		}
+
+		String tempFileName = UUID.randomUUID() + "." + fileExt;
+
 		String filePath = outputDir + "/" + tempFileName;
 
 		try (FileOutputStream fileOutputStream = new FileOutputStream(filePath)) {
@@ -80,12 +90,40 @@ public class Util {
 			return "";
 		}
 
+		if (fileExt.equals("tmp")) {
+			String ext = getFileExt(new File(filePath));
+
+			String newFilePath = filePath.replaceAll("\\.tmp", "\\." + ext);
+			moveFile(filePath, newFilePath);
+			filePath = newFilePath;
+		}
+
 		return filePath;
+	}
+
+	private static String getFileExt(File file) {
+		Tika tika = new Tika();
+		String mimeType = "";
+		try {
+			mimeType = tika.detect(file);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "";
+		}
+		String ext = mimeType.replaceAll("image/", "");
+		ext = ext.replaceAll("jpeg", "jpg");
+
+		return ext;
 	}
 
 	private static String getFileExt(String fileName) {
 		int pos = fileName.lastIndexOf(".");
-		String ext = fileName.substring(pos + 1);
+		
+		if (pos == -1) {
+			return "";
+		}
+
+		String ext = fileName.substring(pos + 1).trim();
 
 		return ext;
 	}
@@ -230,8 +268,7 @@ public class Util {
 	}
 
 	public static List<Integer> getListDividedBy(String str, String divideBy) {
-		return Arrays.asList(str.split(divideBy)).stream().map(s -> Integer.parseInt(s.trim()))
-				.collect(Collectors.toList());
+		return Arrays.asList(str.split(divideBy)).stream().map(s -> Integer.parseInt(s.trim())).collect(Collectors.toList());
 	}
 
 	public static boolean delteFile(String filePath) {
@@ -244,22 +281,22 @@ public class Util {
 	}
 
 	public static int getFileSize(String filePath) {
-		return (int)new File(filePath).length();
+		return (int) new File(filePath).length();
 	}
 
 	public static void copyFile(String filePath, String destFilePath) {
 		File file = new File(filePath);
 		File destFile = new File(destFilePath);
-		
+
 		destFile.mkdirs();
-		
+
 		try {
 			Files.copy(file.toPath(), destFile.toPath());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void moveFile(String filePath, String destFilePath) {
 		Path file = Paths.get(filePath);
 		Path destFile = Paths.get(destFilePath);
@@ -270,13 +307,13 @@ public class Util {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static String getUrlFromHttpServletRequest(HttpServletRequest req) {
 		String url = req.getRequestURI() + "?" + req.getQueryString();
 
 		return url;
 	}
-	
+
 	public static void resizeImgWidth(String filePath, String destFilePath, int width, int height) {
 		try {
 			BufferedImage bufferedImage = ImageIO.read(new File(filePath));
@@ -292,10 +329,8 @@ public class Util {
 				newHeight = originHeight;
 			}
 
-			BufferedImage cropedBufferedImage = Scalr.crop(bufferedImage, (originWidth - newWidth) / 2,
-					(originHeight - newHeight) / 2, newWidth, newHeight);
-			BufferedImage destBufferedImage = Scalr.resize(cropedBufferedImage, Method.ULTRA_QUALITY, Mode.AUTOMATIC,
-					width, height);
+			BufferedImage cropedBufferedImage = Scalr.crop(bufferedImage, (originWidth - newWidth) / 2, (originHeight - newHeight) / 2, newWidth, newHeight);
+			BufferedImage destBufferedImage = Scalr.resize(cropedBufferedImage, Method.ULTRA_QUALITY, Mode.AUTOMATIC, width, height);
 
 			String destFileExt = Util.getFileExt(destFilePath);
 			FileOutputStream fileOutputStream = new FileOutputStream(destFilePath);

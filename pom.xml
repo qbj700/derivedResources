@@ -63,6 +63,13 @@
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- 파일명으로는 알 수 없는 파일의 타입을 분석해주는 -->
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.25</version>
+		</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/org.imgscalr/imgscalr-lib -->
 		<dependency>
 			<groupId>org.imgscalr</groupId>
